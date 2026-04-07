@@ -1,41 +1,28 @@
 const express = require('express');
-const os = require('os');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = 3000;
 
-const tasks = [
-  { id: 1, name: 'Milk',          status: 'done'    },
-  { id: 2, name: 'Eggs',          status: 'done'    },
-  { id: 3, name: 'Bread',         status: 'pending' },
-  { id: 4, name: 'Butter',        status: 'pending' },
-  { id: 5, name: 'Orange juice',  status: 'pending' },
-];
+const MONGO_URI = process.env.MONGO_URI || "mongodb://mongo:27017/tasksdb";
 
-// Route 1: basic info
-app.get('/', (req, res) => {
-  res.json({
-    app:  'CISC 886 Lab 6',
-    mode: process.env.MODE || 'local',
-    node: process.version,
-    host: os.hostname(),
-  });
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(err => console.log(err));
+
+const taskSchema = new mongoose.Schema({
+  id: Number,
+  name: String,
+  status: String
 });
 
-// Route 2: tasks grouped by status
-// Object.groupBy is only available in Node.js v21+.
-// On Node 18 this will throw: TypeError: Object.groupBy is not a function
-app.get('/tasks', (req, res) => {
-  const grouped = Object.groupBy(tasks, task => task.status);
-  res.json(grouped);
+const Task = mongoose.model('Task', taskSchema);
+
+app.get('/tasks', async (req, res) => {
+  const tasks = await Task.find();
+  res.json(tasks);
 });
 
 app.listen(PORT, () => {
-  console.log('--------------------------------------------------');
-  console.log(`  CISC 886 Lab 6 — App started`);
-  console.log(`  Port:  ${PORT}`);
-  console.log(`  Mode:  ${process.env.MODE || 'local'}`);
-  console.log(`  Node:  ${process.version}`);
-  console.log(`  Host:    ${os.hostname()}`);
-  console.log('--------------------------------------------------');
+  console.log(`Server running on port ${PORT}`);
 });
