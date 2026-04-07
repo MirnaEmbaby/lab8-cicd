@@ -30,15 +30,14 @@ const Task = mongoose.model('Task', taskSchema);
 // Add a new task automatically for CI/CD testing
 async function addTestTask() {
   try {
-    const exists = await Task.findOne({ id: 7 });
-    if (!exists) {
-      const newTask = new Task({ id: 7, name: 'Tea', status: 'pending' });
-      await newTask.save();
-      console.log("Test task 'Tea' added");
-    }
+    await Task.updateOne(
+      { id: 7 },
+      { id: 7, name: 'Tea', status: 'pending' },
+      { upsert: true } // <-- creates it if it doesn’t exist
+    );
+    console.log("Test task 'Tea' ensured in DB");
   } catch (err) {
-    console.log("Error adding test task, retrying in 2s...", err);
-    setTimeout(addTestTask, 2000);
+    console.log("Error adding test task:", err);
   }
 }
 
