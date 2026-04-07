@@ -16,7 +16,14 @@ const taskSchema = new mongoose.Schema({
   status: String
 });
 
+
 const Task = mongoose.model('Task', taskSchema);
+
+await Task.updateOne(
+  { id: 7 },
+  { id: 7, name: 'Tea', status: 'pending' },
+  { upsert: true } // ensures Tea exists
+);
 
 app.get('/tasks', async (req, res) => {
   const tasks = await Task.find();
