@@ -6,25 +6,38 @@ const PORT = 3000;
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://mongo:27017/tasksdb";
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch(err => console.log(err));
-
+// Schema and model
 const taskSchema = new mongoose.Schema({
   id: Number,
   name: String,
   status: String
 });
-
-
 const Task = mongoose.model('Task', taskSchema);
 
-await Task.updateOne(
-  { id: 7 },
-  { id: 7, name: 'Tea', status: 'pending' },
-  { upsert: true } // ensures Tea exists
-);
+// Connect to MongoDB
+mongoose.connect(MONGO_URI)
+  .then(() => {
+    console.log("Connected to MongoDB");
+    seedTasks();
+  })
+  .catch(err => console.log(err));
 
+// Async function to ensure all default tasks exist
+async function seedTasks() {
+  const defaultTasks = [
+    { id: 1, name: "Study", status: "done" },
+    { id: 2, name: "Gym", status: "pending" },
+    { id: 7, name: "Tea", status: "pending" }
+  ];
+
+  for (const t of defaultTasks) {
+    await Task.updateOne({ id: t.id }, t, { upsert: true });
+  }
+
+  console.log("All default tasks ensured in DB");
+}
+
+// API endpoint
 app.get('/tasks', async (req, res) => {
   const tasks = await Task.find();
   res.json(tasks);
